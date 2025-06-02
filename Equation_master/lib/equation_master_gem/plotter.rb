@@ -1,53 +1,147 @@
 module EquationMaster
   class Plotter
-    def self.plot(function_str, from: -10, to: 10, height: 20)
-      parsed_func = parse_function(function_str)
-      width = (to - from).to_i
-      step = (to - from).to_f / width
-      x_values = Array.new(width + 1) { |i| from + i * step }
-      y_values = x_values.map { |x| eval_function(parsed_func, x) }
+    WINDOW_WIDTH = 80
+    WINDOW_HEIGHT = 20
 
-      y_min = y_values.min
-      y_max = y_values.max
-      y_range = y_max - y_min
-      y_range = 1 if y_range.zero?  # защита от деления на 0
+    def self.plot(function_str = nil, **options)
+      plot_width  = (options[:width]  || 10).to_f
+      plot_height = (options[:height] || 10).to_f
 
-      # нормализуем y для отображения
-      normalized = y_values.map { |y| ((y - y_min) / y_range * (height - 1)).to_i }
+      grid = initialize_grid
+      draw_axes(grid)
 
-      # создаём пустой график
-      canvas = Array.new(height) { ' ' * (width + 1) }
-
-      normalized.each_with_index do |y, i|
-        row = height - 1 - y
-        canvas[row][i] = '*'
+      (0...Plotter::WINDOW_HEIGHT).each do |row|
+        (0...Plotter::WINDOW_WIDTH).each do |col|
+          if Plotter.should_plot?(function_str, col, row, plot_width, plot_height)
+            grid[row][col] = '•'
+          end
+        end
       end
 
-      # добавить ось x и y
-      x_axis = (0...height).find { |i| i == height - 1 + (y_min > 0 ? -1 : 0) }
-      y_axis = (0...width).find { |i| from + i * step >= 0 } || 0
-
-      canvas.each_with_index do |line, i|
-        line[y_axis] = '|' if line[y_axis] == ' '
-      end
-      canvas[x_axis] = ('-' * (width + 1)).tap { |s| s[y_axis] = '+' }
-
-      puts canvas.map(&:rstrip).join("\n")
+      add_axis_labels(grid, plot_width, plot_height)
+      render(grid)
     end
 
-    private
+    def self.initialize_grid
+      Array.new(WINDOW_HEIGHT) { Array.new(WINDOW_WIDTH, ' ') }
+    end
 
-    # Примитивный парсер, преобразует строку "x^2 + 2x - 3" в валидное выражение Ruby
-    def self.parse_function(str)
-      str = str.gsub(/\bx\b/, 'x')
-      str = str.gsub(/x\^(\d)/, 'x**\1')
+    def self.draw_axes(grid)
+      center_x = WINDOW_WIDTH / 2
+      center_y = WINDOW_HEIGHT / 2
+
+      (0...WINDOW_WIDTH).each do |x|
+        grid[center_y][x] = '─'
+      end
+
+      (0...WINDOW_HEIGHT).each do |y|
+        grid[y][center_x] = '│'
+      end
+
+      grid[center_y][center_x] = '┼'
+
+      grid[center_y][WINDOW_WIDTH - 1] = '>'
+      grid[0][center_x] = '^'
+    end
+
+    def self.add_axis_labels(grid, plot_width, plot_height)
+      center_x = WINDOW_WIDTH / 2
+      center_y = WINDOW_HEIGHT / 2
+
+      x_values = [
+        -plot_width / 2.0,
+        -plot_width / 4.0,
+         plot_width / 4.0,
+         plot_width / 2.0
+      ]
+
+      x_values.each do |x_val|
+        px = (( (x_val + (plot_width / 2.0)) / plot_width ) * (WINDOW_WIDTH - 1)).round
+        label = format_label(x_val)
+
+        row = center_y + 1
+        next if row >= WINDOW_HEIGHT
+
+        start_col = px - (label.length / 2)
+        (0...label.length).each do |i|
+          col = start_col + i
+          if col.between?(0, WINDOW_WIDTH - 1)
+            grid[row][col] = label[i]
+          end
+        end
+      end
+
+      # Compute Y-axis label positions and values
+      y_values = [
+         plot_height / 2.0,
+         plot_height / 4.0,
+        -plot_height / 4.0,
+        -plot_height / 2.0
+      ]
+
+      y_values.each do |y_val|
+        # Map logical y_val to row index
+        py = (( ( (plot_height / 2.0) - y_val ) / plot_height ) * (WINDOW_HEIGHT - 1)).round
+        label = format_label(y_val)
+
+        # Place label to the left of the y-axis, right-aligned at col center_x - 1
+        col_end = center_x - 1
+        start_col = col_end - label.length + 1
+        next if py < 0 || py >= WINDOW_HEIGHT
+
+        (0...label.length).each do |i|
+          col = start_col + i
+          if col.between?(0, WINDOW_WIDTH - 1)
+            grid[py][col] = label[i]
+          end
+        end
+      end
+    end
+
+    def self.format_label(value)
+      str = sprintf('%.2f', value)
+      str.sub!(/\.?0+$/, '')
       str
     end
 
-    def self.eval_function(str, x)
-      eval(str)
-    rescue
-      Float::NAN
+    def self.render(grid)
+      grid.each { |row| puts row.join }
     end
+
+    def self.should_plot?(function_str, col, row, plot_width, plot_height)
+      expr = function_str.gsub(/\s+/, '').gsub('^', '**')
+
+      unless expr =~ /\A[0-9x\+\-\*\/\.\(\)\^]+\z/
+        raise ArgumentError, "Некорректный формат функции: #{function_str}"
+      end
+
+      f = eval("->(x) { #{expr} }")
+
+      x_min = ( col.to_f           / (WINDOW_WIDTH - 1)) * plot_width - (plot_width / 2.0)
+      x_max = ((col + 1).to_f / (WINDOW_WIDTH - 1)) * plot_width - (plot_width / 2.0)
+
+      begin
+        y1 = f.call(x_min)
+        y2 = f.call(x_max)
+        return false unless y1.is_a?(Numeric) && y1.finite? &&
+                            y2.is_a?(Numeric) && y2.finite?
+      rescue
+        return false
+      end
+
+      y_center = (((WINDOW_HEIGHT - 1 - row).to_f / (WINDOW_HEIGHT - 1)) * plot_height) - (plot_height / 2.0)
+
+      cell_half = (plot_height / (WINDOW_HEIGHT - 1)) / 2.0
+      y_cell_min = y_center - cell_half
+      y_cell_max = y_center + cell_half
+
+      y_low_segment  = [y1, y2].min
+      y_high_segment = [y1, y2].max
+
+      return false if y_high_segment < y_cell_min || y_low_segment > y_cell_max
+
+      true
+    end
+
   end
 end

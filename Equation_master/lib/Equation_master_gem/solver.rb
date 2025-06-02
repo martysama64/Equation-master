@@ -45,7 +45,6 @@ module EquationMaster
       # Максимальная степень
       max_degree = coefficients.keys.max || 0
       
-      # Отсортированный массив степеней, от старшей к младшей
       coeff_array = []
       (max_degree.downto(0)).each do |degree|
         coeff_array << (coefficients[degree] || 0)
