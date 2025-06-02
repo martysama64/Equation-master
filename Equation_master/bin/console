@@ -2,7 +2,7 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
-require "Equation_master_gem"
+require "equation_master_gem"
 
 # You can add playground code here to test your gem
 puts "EquationMaster #{EquationMaster::VERSION} console"

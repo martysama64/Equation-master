@@ -1,6 +1,6 @@
 require 'minitest/autorun'
 require 'minitest/reporters'
-require_relative '../lib/Equation_master_gem/solver'
+require_relative '../lib/equation_master_gem/solver'
 
 Minitest::Reporters.use! [Minitest::Reporters::SpecReporter.new]
 

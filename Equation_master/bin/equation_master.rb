@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require "Equation_master_gem"
+require "equation_master_gem"
 
 command = ARGV[0]
 
@@ -8,7 +8,7 @@ case command
 when "solve"
   equation = ARGV[1]
   result = EquationMaster::Solver.solve(equation)
-  # Красивый вывод результатов
+
   puts "Уравнение: #{equation}"
   puts "\nРезультаты:"
   puts "  Тип: #{result[:type]}"

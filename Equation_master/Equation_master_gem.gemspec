@@ -2,7 +2,7 @@
 
 lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'Equation_master_gem/version'
+require 'equation_master_gem/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "equation_master"
