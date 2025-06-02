@@ -71,7 +71,6 @@ module EquationMaster
         end
       end
 
-      # Compute Y-axis label positions and values
       y_values = [
          plot_height / 2.0,
          plot_height / 4.0,
@@ -80,11 +79,9 @@ module EquationMaster
       ]
 
       y_values.each do |y_val|
-        # Map logical y_val to row index
         py = (( ( (plot_height / 2.0) - y_val ) / plot_height ) * (WINDOW_HEIGHT - 1)).round
         label = format_label(y_val)
-
-        # Place label to the left of the y-axis, right-aligned at col center_x - 1
+        
         col_end = center_x - 1
         start_col = col_end - label.length + 1
         next if py < 0 || py >= WINDOW_HEIGHT
