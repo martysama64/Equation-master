@@ -7,8 +7,8 @@ require 'equation_master_gem/version'
 Gem::Specification.new do |spec|
   spec.name          = "equation_master"
   spec.version       = EquationMaster::VERSION
-  spec.authors       = ["Fayld"]
-  spec.email         = ["your.email@example.com"]
+  spec.authors       = ["KanroL", "Fayld", "Marty_s64"]
+  spec.email         = ["martisagak@gmail.com","kraoleg@SFEDU.ru", "volkovmen2004@yandex.ru","aleks3204932@MAIL.RU"]
 
   spec.summary       = "Gem for solving quadratic and cubic equations"
   spec.description   = "A library for solving equations and plotting graphs in terminal"

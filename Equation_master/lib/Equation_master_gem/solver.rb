@@ -19,22 +19,18 @@ module EquationMaster
 
     def self.parse_equation(equation)
 
-      # Удаление пробелов
       equation = equation.gsub(/\s+/, '').downcase
       
-      # Проверка наличия =
       unless equation.include?('=')
         raise "Нет знака равенства"
       end
       
       left, right = equation.split('=', 2)
       
-      # Перенос правой части влево
       right_terms = parse_terms(right)
       right_terms.each { |t| t[:coef] *= -1 }
       all_terms = parse_terms(left) + right_terms
       
-      # Определение степеней
       coefficients = {}
       all_terms.each do |term|
         degree = term[:degree]
@@ -42,7 +38,6 @@ module EquationMaster
         coefficients[degree] += term[:coef]
       end
       
-      # Максимальная степень
       max_degree = coefficients.keys.max || 0
       
       coeff_array = []
@@ -147,7 +142,6 @@ module EquationMaster
     def self.solve_cubic(coeffs)
         a, b, c, d = coeffs
         
-        # Приведение к виду x³ + px² + qx + r = 0
         if a.abs < 1e-10
           return solve_quadratic([b, c, d])
         end
@@ -210,7 +204,6 @@ module EquationMaster
   end
 end
 
-# Добавление метод sign для Numeric
 class Numeric
   def sign
     self < 0 ? -1 : 1
